@@ -2,7 +2,7 @@
   "name": "NVH Frequency Chart",
   "short_name": "NVH Chart",
   "description": "Vibration order calculator for engine, transmission, driveline and tires",
-  "start_url": "nvh_webapp/",
+  "start_url": "nvh_webapp/index.html",
   "display": "standalone",
   "background_color": "#030712",
   "theme_color": "#030712",
