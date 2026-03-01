@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+        <meta name="theme-color" content="#030712"/>
+        <meta name="mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+        <meta name="apple-mobile-web-app-title" content="NVH Chart"/>
+        <link rel="manifest" href="manifest.json"/>
+        <title>NVH Frequency Chart</title>
+        <style>
+            *{box-sizing:border-box;margin:0;padding:0}
+            body{background:#030712;color:#f3f4f6;font-family:system-ui,sans-serif;font-size:13px;padding:8px;min-height:100vh}
+            h1{font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:2px}
+            .sub{color:#9ca3af;font-size:11px;margin-bottom:12px}
+            .card{background:#111827;border:1px solid #1f2937;border-radius:12px;margin-bottom:10px}
+            .card-body{padding:12px}
+            .tabs{display:flex;flex-wrap:wrap;gap:4px;padding:8px;border-bottom:1px solid #1f2937}
+            .tab{padding:5px 10px;font-size:11px;font-weight:600;border-radius:8px;cursor:pointer;border:none;background:#111827;color:#9ca3af}
+            .tab.active{background:#374151;color:#fff}
+            label{display:block;font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+            input[type=number],select{background:#1f2937;border:1px solid #374151;border-radius:8px;color:#fff;padding:6px 8px;font-size:12px;outline:none}
+            .btn{padding:4px 10px;border-radius:6px;border:1px solid #374151;background:#1f2937;color:#d1d5db;font-size:11px;font-weight:600;cursor:pointer}
+            .btn.ab{background:#2563eb;color:#fff;border-color:#2563eb}
+            .btn.ar{background:#b91c1c;color:#fff;border-color:#ef4444}
+            .btn.ag{background:#15803d;color:#fff;border-color:#22c55e}
+            .btn.ay{background:#a16207;color:#fff;border-color:#eab308}
+            .btn.aw{background:#fff;color:#111;border-color:#fff}
+            .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+            .col{display:flex;flex-direction:column;gap:6px}
+            .bg{display:flex;flex-wrap:wrap;gap:3px}
+            .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+            .br{background:#7f1d1d;color:#fecaca}.bb{background:#1e3a5f;color:#bfdbfe}
+            .by{background:#713f12;color:#fef08a}.bgg{background:#14532d;color:#bbf7d0}
+            .bfire{background:#991b1b;color:#fff}
+            .ib{background:#1f2937;border:1px solid #374151;border-radius:8px;padding:8px;font-size:11px}
+            .ig{display:grid;grid-template-columns:1fr 1fr;gap:2px 16px}
+            .vg{color:#86efac;font-weight:700}.vy{color:#fde68a;font-weight:700}
+            .xr{color:#fca5a5;font-weight:700}.xg{color:#86efac;font-weight:700}
+            .xy{color:#fde68a;font-weight:700}.xb{color:#93c5fd;font-weight:700}
+            .xo{color:#fb923c;font-weight:700}
+            .filter-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;margin-bottom:8px}
+            .unit-toggle{display:flex;border:1px solid #374151;border-radius:8px;overflow:hidden}
+            .unit-toggle button{padding:4px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#1f2937;color:#d1d5db}
+            .unit-toggle button.active{background:#2563eb;color:#fff}
+            .tbl-wrap{overflow-x:auto}
+            table.ft{width:100%;border-collapse:collapse;min-width:500px}
+            table.ft th{background:#1f2937;font-size:10px;font-weight:700;text-transform:uppercase;padding:6px 4px;border-bottom:1px solid #374151;white-space:nowrap}
+            table.ft td{padding:5px 4px;border-bottom:1px solid #1f2937;font-size:11px;vertical-align:middle}
+            table.ft tr:hover td{background:#1f2937}
+            table.ft tr.firing td{background:#1c0a0a}
+            .ob{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;background:#374151;color:#fff}
+            .ob.f{background:#991b1b}
+            .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:10px;color:#6b7280;margin-top:6px}
+            .fg{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
+            @media(max-width:480px){.fg{grid-template-columns:1fr}}
+            .fb{background:#1f2937;border-radius:6px;padding:6px 8px;font-family:monospace;color:#6ee7b7}
+            .dot{width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;animation:pulse 1s infinite}
+            @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+            table.pt{width:100%;border-collapse:collapse;font-size:11px}
+            table.pt th{background:#1f2937;padding:4px 8px;text-align:left;color:#9ca3af;font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid #374151}
+            table.pt td{padding:4px 8px;border-bottom:1px solid #1f2937}
+            #bars{display:flex;align-items:flex-end;gap:1px;height:160px;background:#111827;border-radius:8px;padding:4px;margin:8px 0;position:relative;overflow:hidden}
+            .bar{width:3px;background:#22d3ee;border-radius:1px 1px 0 0;flex-shrink:0}
+            .ol{position:absolute;top:0;bottom:0;width:1px;border-left:1px dashed;pointer-events:none}
+            .ol-lbl{position:absolute;font-size:8px;font-family:monospace;pointer-events:none}
+            .btn-big{border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
+        </style>
+    </head>
+    <body>
+        <h1>NVH Frequency Chart</h1>
+            <p class="sub">Vibration orders — Engine, Transmission, Driveline &amp; Tires</p>
+
+        <div class="card">
+            <div class="tabs" id="tabs"></div>
+            <div class="card-body" id="panel"></div>
+
+            <div class="card-body" id="accel-panel" style="display:none">
+                <div class="col" style="gap:10px">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                        <button class="btn-big" id="btn-start" style="background:#1d4ed8;color:#fff" onclick="startAccel()">▶ Start Capture</button>
+                        <button class="btn-big" id="btn-stop" style="background:#b91c1c;color:#fff;display:none" onclick="stopAccel()">⏹ Stop</button>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+                        <div style="display:flex;align-items:center;gap:4px">
+                            <label style="margin:0">Axis</label>
+                            <select id="sel-axis" style="width:65px">
+                                <option value="x">X</option>
+                                <option value="y">Y</option>
+                                <option value="z" selected>Z</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:4px">
+                            <label style="margin:0">Gain</label>
+                            <select id="sel-gain" style="width:65px">
+                                <option value="1">1x</option>
+                                <option value="2" selected>2x</option>
+                                <option value="5">5x</option>
+                                <option value="10">10x</option>
+                                <option value="20">20x</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:4px">
+                            <label style="margin:0">Sample Rate</label>
+                            <select id="sel-sr" style="width:75px">
+                                <option value="25">25 Hz</option>
+                                <option value="50" selected>50 Hz</option>
+                                <option value="100">100 Hz</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="bars">
+                        <span id="bars-msg" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#4b5563;font-size:12px;white-space:nowrap">Press Demo Mode or Start Capture</span>
+                    </div>
+                    <div id="accel-status" style="color:#6b7280;font-size:11px">
+                        Mount phone firmly to vehicle. Set RPM, speed and tire size before starting.
+                    </div>
+                    <div id="accel-peaks"></div>
+                    <div class="legend">
+                        <div style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:16px;border-top:2px dashed rgba(239,68,68,0.8)"></span><span>Engine orders</span></div>
+                        <div style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:16px;border-top:2px dashed rgba(34,197,94,0.8)"></span><span>Tire orders</span></div>
+                        <div style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:16px;border-top:2px dashed rgba(234,179,8,0.8)"></span><span>Driveshaft orders</span></div>
+                        <div style="display:flex;align-items:center;gap:4px"><span style="color:#fb923c">●</span><span>Detected peak</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="filter-row" class="filter-row"></div>
+        <div id="tbl-wrap" class="tbl-wrap card"></div>
+        <div id="legend2" class="legend" style="margin-top:6px"></div>
+        <div id="formulas" class="card" style="margin-top:10px;margin-bottom:16px"></div>
+
+        <script>
+            var ORDERS=[0.5,1,1.5,2,2.5,3,3.5,4];
+            var ETYPES={
+                "4-Cyl":{fo:[2,4]},
+                "5-Cyl":{fo:[2.5]},
+                "6-Cyl":{fo:[3]},
+                "8-Cyl":{fo:[4]}
+            };
+            var SSRC={
+                transmission:{
+                    0.5:"—", 1:"Input shaft imbalance", 1.5:"—", 2:"2nd order/gear mesh", 2.5:"—", 3:"3rd order gear dist.", 3.5:"—", 4:"4th order gear mesh"},
+                driveline:{
+                    0.5:"—",1:"Driveshaft imbalance",1.5:"—",2:"U-joint velocity var.",2.5:"—",3:"3-lobe yoke var.",3.5:"—",4:"4-lobe DS variation"},
+                tire:{
+                    0.5:"—",1:"Wheel imbalance/flat spot",1.5:"—",2:"Out-of-round/2-pt flat",2.5:"—",3:"3-pt wear pattern",3.5:"—",4:"4-pt wear pattern"}
+            };
+            var CTIRES=["195/65R15", "205/55R16", "215/55R17", "225/45R17", "225/50R17", "225/55R17", "235/45R18", "245/40R18", "245/45R18", "255/35R19", "265/50R20", "275/55R20", "285/50R20", "305/55R20"];
+            var CFD=[
+                {l:"2.73",v:2.73},{l:"2.93",v:2.93},{l:"3.08",v:3.08},{l:"3.21",v:3.21},{l:"3.31",v:3.31},{l:"3.42",v:3.42},{l:"3.55",v:3.55},{l:"3.73",v:3.73},{l:"3.90",v:3.90},{l:"4.10",v:4.10},{l:"4.30",v:4.30},{l:"4.56",v:4.56}
+            ];
+            var RPRE=[600,800,1000,1500,2000,2500,3000,4000,5000,6000];
+            var SPRE=[10,20,30,40,50,60,70,80,90,100];
+            var CATS=["engine","transmission","driveline","tire"];
+            var CBADGE={engine:"br",transmission:"bb",driveline:"by",tire:"bgg"};
+            var CCOLOR={engine:"xr",transmission:"xb",driveline:"xy",tire:"xg"};
+            var CBTN={engine:"ar",transmission:"ab",driveline:"ay",tire:"ag"};
+
+            var S={rpm:1000,et:"4-Cyl",hz:true,cat:"all",spd:60,tw:225,ta:55,tr:17,ts:"225/55R17",fd:3.73,sec:"engine"};
+            var A={on:false,demo:false,buf:[],mags:[],pks:[],ld:0};
+            var motH=null,rafId=null,demoT=0;
+
+            function tdiam(w,a,r){return r+2*(w*(a/100)/25.4);}
+            function tcirc(w,a,r){return Math.PI*tdiam(w,a,r)/12;}
+            function trpm(m,w,a,r){return(m*5280/60)/tcirc(w,a,r);}
+            function thz(m,w,a,r){return trpm(m,w,a,r)/60;}
+            function dsrpm(m,w,a,r,f){return trpm(m,w,a,r)*f;}
+            function dshz(m,w,a,r,f){return dsrpm(m,w,a,r,f)/60;}
+            function esrc(o,t){
+                var fo=ETYPES[t].fo;
+                if(o===0.5)return"Single cyl misfire";
+                if(o===1)return"Crank imbalance/runout";
+                var i=fo.indexOf(o);
+                if(i===0)return t+" primary firing";
+                if(i===1)return t+" firing H1";
+                return"—";
+            }
+            function getSR(){return parseInt(document.getElementById("sel-sr").value)||50;}
+            function getGain(){return parseFloat(document.getElementById("sel-gain").value)||2;}
+            function getAxis(){return document.getElementById("sel-axis").value||"z";}
+
+            function fft(re,im){
+                var n=re.length;if(n<=1)return;
+                var h=n>>1,reE=[],reO=[],imE=[],imO=[];
+                for(var i=0;i<h;i++){
+                    reE[i]=re[i*2];imE[i]=im[i*2];reO[i]=re[i*2+1];imO[i]=im[i*2+1];
+                }
+                fft(reE,imE);
+                fft(reO,imO);
+                for(var k=0;k<h;k++){
+                    var a=-2*Math.PI*k/n,c=Math.cos(a),s=Math.sin(a);
+                    var tr=c*reO[k]-s*imO[k],ti=c*imO[k]+s*reO[k];
+                    re[k]=reE[k]+tr;im[k]=imE[k]+ti;re[k+h]=reE[k]-tr;im[k+h]=imE[k]-ti;
+                }
+            }
+            function doFFT(buf,sr){
+                var n=buf.length,re=[],im=[],mean=0;
+                for(var i=0;i<n;i++)mean+=buf[i];mean/=n;
+                for(var i=0;i<n;i++){
+                    var w=0.5*(1-Math.cos(2*Math.PI*i/(n-1)));re[i]=(buf[i]-mean)*w;im[i]=0;
+                }
+                fft(re,im);
+                var out=[];
+                for(var i=0;i<n/2;i++)out.push({hz:i*(sr/n),mag:Math.sqrt(re[i]*re[i]+im[i]*im[i])/(n/2)});
+                return out;
+            }
+            function findPeaks(mags,count){
+                var s=mags.slice(1).sort(function(a,b){return b.mag-a.mag;}),out=[];
+                for(var i=0;i<s.length&&out.length<count;i++){
+                    var p=s[i];if(p.hz<0.5)continue;
+                    if(!out.some(function(q){
+                        return Math.abs(q.hz-p.hz)<1;
+                    }))out.push(p);
+                }
+                return out;
+            }
+            function matchOrd(hz){
+                var e1=S.rpm/60,t1=thz(S.spd,S.tw,S.ta,S.tr),d1=dshz(S.spd,S.tw,S.ta,S.tr,S.fd);
+                var tol=Math.max(0.5,hz*0.05),cands=[];
+                ORDERS.forEach(function(o){
+                    var ed=Math.abs(hz-e1*o),td=Math.abs(hz-t1*o),dd=Math.abs(hz-d1*o);
+                    if(ed<tol)cands.push({order:o,src:"Engine",diff:ed});
+                    if(td<tol)cands.push({order:o,src:"Tire",diff:td});
+                    if(dd<tol)cands.push({order:o,src:"DS",diff:dd});
+                });
+                if(!cands.length)return null;
+                return cands.sort(function(a,b){return a.diff-b.diff;})[0];
+            }
+
+            function drawBars(){
+                var el=document.getElementById("bars");
+                if(!el||!A.mags.length)return;
+                var sr=getSR(),maxD=sr/2;
+                var vis=A.mags.filter(function(m){return m.hz>0&&m.hz<=maxD;});
+                var maxM=0;
+                vis.forEach(function(m){if(m.mag>maxM)maxM=m.mag;});
+                if(maxM<0.001)maxM=0.001;
+                var W=el.offsetWidth||300,H=150;
+                var html="";
+                var step=Math.max(1,Math.floor(vis.length/Math.floor(W/4)));
+                vis.forEach(function(m,i){
+                    if(i%step!==0)return;
+                    var h=Math.max(1,Math.round((m.mag/maxM)*(H-10)));
+                    html+='<div class="bar" style="height:'+h+'px"></div>';
+                });
+                var sets=[
+                    {hz1:S.rpm/60,color:"rgba(239,68,68,0.9)"},
+                    {hz1:thz(S.spd,S.tw,S.ta,S.tr),color:"rgba(34,197,94,0.9)"},
+                    {hz1:dshz(S.spd,S.tw,S.ta,S.tr,S.fd),color:"rgba(234,179,8,0.9)"}
+                ];
+                sets.forEach(function(os){
+                    if(!os.hz1||os.hz1<=0)return;
+                    ORDERS.forEach(function(o,oi){
+                    var hz=os.hz1*o;if(hz<=0||hz>maxD)return;
+                    var x=Math.round((hz/maxD)*W);
+                    html+='<div class="ol" style="left:'+x+'px;border-color:'+os.color+'"></div>';
+                    html+='<div class="ol-lbl" style="left:'+(x+1)+'px;color:'+os.color+';top:'+(oi%4*10+2)+'px">'+o+'x</div>';
+                    });
+                });
+                el.innerHTML=html;
+                var domHz=null,domM=null;
+                
+                if(A.pks.length){
+                    domHz=A.pks[0].hz;domM=matchOrd(domHz);
+                }
+                var st=document.getElementById("accel-status");
+                
+                if(st){
+                    var h2='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:11px">'
+                    +'<span class="dot"></span>'
+                    +'<span style="color:#4ade80;font-weight:600">'+(A.demo?"Demo":"Live")+' — '+A.buf.length+' samples</span>';
+                    if(domHz)h2+='<span style="color:#fdba74">Dominant: <strong>'+domHz.toFixed(2)+' Hz</strong></span>';
+                    if(domM){var mc=domM.src==="Engine"?"xr":domM.src==="Tire"?"xg":"xy";h2+='<span class="'+mc+'" style="font-weight:700">→ '+domM.order+'x '+domM.src+'</span>';}
+                    h2+='</div>';
+                    st.innerHTML=h2;
+                }
+                
+                var pk=document.getElementById("accel-peaks");
+                
+                if(pk&&A.pks.length){
+                    var rows=A.pks.map(function(p){
+                    var m=matchOrd(p.hz),ms=m?m.order+"x "+m.src:"No match",mc=m?(m.src==="Engine"?"xr":m.src==="Tire"?"xg":"xy"):"";
+                    return'<tr><td class="xo" style="font-weight:700">'+p.hz.toFixed(2)+' Hz</td>'
+                        +'<td>'+(p.mag*1000).toFixed(1)+'</td>'
+                        +'<td class="'+mc+'" style="font-weight:600">'+ms+'</td></tr>';
+                    }).join("");
+                    pk.innerHTML='<div class="card" style="margin-top:6px">'
+                    +'<div style="padding:6px 8px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;border-bottom:1px solid #1f2937">Detected Peaks</div>'
+                    +'<table class="pt"><thead><tr><th>Frequency</th><th>Amplitude</th><th>Order Match</th></tr></thead>'
+                    +'<tbody>'+rows+'</tbody></table></div>';
+                }
+            }
+
+            function loop(ts){
+                if(!A.on)return;
+                rafId=requestAnimationFrame(loop);
+                if(ts-A.ld<120)return;
+                A.ld=ts;
+                var sr=getSR(),bsz=512;
+                if(A.buf.length>=bsz){
+                    A.mags=doFFT(A.buf.slice(-bsz),sr);
+                    A.pks=findPeaks(A.mags,5);
+                    drawBars();
+                }
+            }
+
+            function setRunning(on){
+                A.on=on;
+                document.getElementById("btn-start").style.display=on?"none":"inline-block";
+                document.getElementById("btn-stop").style.display=on?"inline-block":"none";
+            }
+
+            function startAccel(){
+                if(typeof DeviceMotionEvent==="undefined"){
+                    alert("DeviceMotion API not supported on this browser.");return;
+                }
+            
+                function go(){
+                    A.buf=[];
+                    motH=function(e){
+                        var acc=e.accelerationIncludingGravity||e.acceleration;
+                        if(!acc)return;
+                        var ax=getAxis(),v=ax==="x"?acc.x:ax==="y"?acc.y:acc.z;
+                        if(v==null)return;
+                        A.buf.push(v*getGain());
+                        if(A.buf.length>4096)A.buf=A.buf.slice(-2048);
+                    };
+                    
+                    window.addEventListener("devicemotion",motH);
+                    setRunning(true);
+                    rafId=requestAnimationFrame(loop);
+                }
+
+                if(typeof DeviceMotionEvent.requestPermission==="function"){
+                    DeviceMotionEvent.requestPermission()
+                    .then(function(r){if(r==="granted")go();else alert("Motion sensor permission denied.");})
+                    .catch(function(e){alert("Permission error: "+e);});
+                } else {
+                    go();
+                }
+            }
+
+            function stopAccel(){
+                setRunning(false,false);
+                A.mags=[];A.pks=[];A.buf=[];
+                if(motH)window.removeEventListener("devicemotion",motH);
+                if(rafId)cancelAnimationFrame(rafId);
+                var el=document.getElementById("bars");
+                if(el)el.innerHTML='<span id="bars-msg" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#4b5563;font-size:12px;white-space:nowrap">Press Demo Mode or Start Capture</span>';
+                var st=document.getElementById("accel-status");
+                if(st)st.innerHTML='<span style="color:#6b7280;font-size:11px">Stopped.</span>';
+                var pk=document.getElementById("accel-peaks");
+                if(pk)pk.innerHTML="";
+            }
+
+            function ss(k,v){S[k]=v;renderAll();}
+            function setRpm(v){var n=parseInt(v);if(!isNaN(n)&&n>0&&n<=8000){S.rpm=n;renderAll();}}
+            function setSpd(v){var n=parseInt(v);if(!isNaN(n)&&n>0&&n<=200){S.spd=n;renderAll();}}
+            function selTire(v){var m=v.match(/^(\d+)\/(\d+)R(\d+)$/);if(m){S.ts=v;S.tw=+m[1];S.ta=+m[2];S.tr=+m[3];renderAll();}}
+            function applyTire(){
+                var w=+document.getElementById("cW").value,a=+document.getElementById("cA").value,r=+document.getElementById("cR").value;
+                if(w>0&&a>0&&r>0){S.tw=w;S.ta=a;S.tr=r;S.ts=w+"/"+a+"R"+r;renderAll();}
+            }
+            function selFD(v){S.fd=parseFloat(v);renderAll();}
+            function applyFD(){var n=parseFloat(document.getElementById("cFD").value);if(n>0&&n<=10){S.fd=n;renderAll();}}
+            function btn(lbl,oc,act,cls){return'<button class="btn'+(act?" "+(cls||"ab"):"")+'" onclick="'+oc+'">'+lbl+'</button>';}
+
+            function renderAll(){
+                var sec=S.sec,rpm=S.rpm,et=S.et,hz=S.hz,cat=S.cat,spd=S.spd,tw=S.tw,ta=S.ta,tr=S.tr,ts=S.ts,fd=S.fd;
+                var eng=ETYPES[et],cats=cat==="all"?CATS:[cat],unit=hz?"Hz":"CPM";
+
+                var tabH="";
+                [["engine","⚙️ Engine/RPM"],["speedtire","🛞 Speed/Tire"],["finaldrive","🔩 Final Drive"],["accel","📡 Live Accel"]].forEach(function(t){
+                    tabH+='<button class="tab'+(sec===t[0]?" active":"")+'" onclick="ss(\'sec\',\''+t[0]+'\')">'+t[1]+'</button>';
+                });
+
+                document.getElementById("tabs").innerHTML=tabH;
+                var isAccel=sec==="accel";
+                document.getElementById("panel").style.display=isAccel?"none":"block";
+                document.getElementById("accel-panel").style.display=isAccel?"block":"none";
+                document.getElementById("filter-row").style.display=isAccel?"none":"flex";
+                document.getElementById("tbl-wrap").style.display=isAccel?"none":"block";
+                document.getElementById("legend2").style.display=isAccel?"none":"flex";
+                document.getElementById("formulas").style.display=isAccel?"none":"block";
+
+                if(isAccel)return;
+
+                var tD=tdiam(tw,ta,tr).toFixed(2),tC=tcirc(tw,ta,tr).toFixed(3);
+                var tBHz=thz(spd,tw,ta,tr).toFixed(2),tBR=trpm(spd,tw,ta,tr).toFixed(1);
+                var dBHz=dshz(spd,tw,ta,tr,fd).toFixed(2),dBR=dsrpm(spd,tw,ta,tr,fd).toFixed(1);
+
+                var panelH="";
+                if(sec==="engine"){
+                    panelH='<div class="row"><div class="col"><label>Engine Type</label><div class="bg">'
+                    +Object.keys(ETYPES).map(function(e){return btn(e,"ss('et','"+e+"')",et===e,"ar");}).join("")
+                    +'</div></div><div class="col"><label>Firing Orders</label><div class="bg">'
+                    +eng.fo.map(function(fo,i){return'<span class="badge bfire">'+(i===0?"Base":"H"+i)+": "+fo+"x</span>";}).join("")
+                    +'</div></div></div>'
+                    +'<div class="row" style="margin-top:10px">'
+                    +'<div class="col"><label>RPM</label><input type="number" value="'+rpm+'" min="100" max="8000" style="width:90px;text-align:center;font-weight:700;font-size:15px" oninput="setRpm(this.value)"/></div>'
+                    +'<div class="col"><label>Presets</label><div class="bg">'+RPRE.map(function(r){return btn(r,"setRpm("+r+")",rpm===r);}).join("")+'</div></div></div>';
+                } else if(sec==="speedtire"){
+                    panelH='<div class="row">'
+                    +'<div class="col">'
+                        +'<div class="col"><label>Speed (mph)</label><input type="number" value="'+spd+'" min="1" max="200" style="width:90px;text-align:center;font-weight:700;font-size:15px" oninput="setSpd(this.value)"/></div>'
+                        +'<div class="bg" style="margin-top:4px">'+SPRE.map(function(s){return btn(s,"setSpd("+s+")",spd===s,"ag");}).join("")+'</div>'
+                    +'</div>'
+                    +'<div class="col"><label>Tire Size</label>'
+                        +'<select onchange="selTire(this.value)" style="width:140px">'+CTIRES.map(function(t){return'<option value="'+t+'" '+(ts===t?"selected":"")+'>'+t+'</option>';}).join("")+'</select>'
+                        +'<div style="display:flex;align-items:center;gap:4px;margin-top:4px">'
+                        +'<input id="cW" type="number" placeholder="225" style="width:52px;text-align:center"/>'
+                        +'<span style="color:#6b7280;font-weight:700">/</span>'
+                        +'<input id="cA" type="number" placeholder="55" style="width:48px;text-align:center"/>'
+                        +'<span style="color:#6b7280;font-weight:700">R</span>'
+                        +'<input id="cR" type="number" placeholder="17" style="width:48px;text-align:center"/>'
+                        +'<button class="btn ag" onclick="applyTire()">Apply</button>'
+                        +'</div>'
+                    +'</div>'
+                    +'<div class="ib"><div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px">Tire: '+ts+'</div>'
+                        +'<div class="ig">'
+                        +'<div><span style="color:#9ca3af">Diam: </span><span class="vg">'+tD+'"</span></div>'
+                        +'<div><span style="color:#9ca3af">Circ: </span><span class="vg">'+tC+' ft</span></div>'
+                        +'<div><span style="color:#9ca3af">RPM: </span><span class="vg">'+tBR+'</span></div>'
+                        +'<div><span style="color:#9ca3af">1x: </span><span class="vg">'+tBHz+' Hz</span></div>'
+                        +'</div>'
+                    +'</div>'
+                    +'</div>';
+                } else if(sec==="finaldrive"){
+                    panelH='<div class="row">'
+                    +'<div class="col"><label>Final Drive Ratio</label>'
+                        +'<div class="bg">'+CFD.map(function(f){return btn(f.l,"selFD("+f.v+")",fd===f.v,"ay");}).join("")+'</div>'
+                        +'<div style="display:flex;gap:6px;align-items:center;margin-top:4px">'
+                        +'<input id="cFD" type="number" step="0.01" min="1" max="10" placeholder="Custom" style="width:100px;text-align:center"/>'
+                        +'<button class="btn ay" onclick="applyFD()">Apply</button>'
+                        +'</div>'
+                    +'</div>'
+                    +'<div class="ib"><div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px">Driveshaft @ '+spd+' mph</div>'
+                        +'<div class="ig">'
+                        +'<div><span style="color:#9ca3af">Ratio: </span><span class="vy">'+fd.toFixed(2)+':1</span></div>'
+                        +'<div><span style="color:#9ca3af">DS RPM: </span><span class="vy">'+dBR+'</span></div>'
+                        +'<div><span style="color:#9ca3af">DS 1x: </span><span class="vy">'+dBHz+' Hz</span></div>'
+                        +'</div>'
+                    +'</div>'
+                    +'</div>';
+                }
+                document.getElementById("panel").innerHTML=panelH;
+
+                var rows=ORDERS.map(function(o){
+                    var eH=(rpm/60)*o,tH=thz(spd,tw,ta,tr)*o,dH=dshz(spd,tw,ta,tr,fd)*o;
+                    return{
+                        o:o,f:eng.fo.includes(o),
+                        eV:hz?eH.toFixed(1):Math.round(eH*60),
+                        tV:hz?tH.toFixed(2):Math.round(tH*60),
+                        dV:hz?dH.toFixed(2):Math.round(dH*60),
+                        src:{engine:esrc(o,et),transmission:SSRC.transmission[o]||"—",driveline:SSRC.driveline[o]||"—",tire:SSRC.tire[o]||"—"}
+                    };
+                });
+
+                var catF='<button class="btn'+(cat==="all"?" aw":"")+'" onclick="ss(\'cat\',\'all\')">All</button>'
+                    +CATS.map(function(c){var nx=cat===c?"all":c;return'<button class="btn'+(cat===c?" "+CBTN[c]:"")+'" onclick="ss(\'cat\',\''+nx+'\')">'+c+'</button>';}).join("");
+                var catH=cats.map(function(c){return'<th class="'+CCOLOR[c]+'">'+c+'</th>';}).join("");
+                var trows=rows.map(function(row){
+                    var ob='<span class="ob'+(row.f?" f":"")+'">'+row.o+'x</span>'+(row.f?' <span style="color:#f87171">🔥</span>':"");
+                    var sc=cats.map(function(c){var src=row.src[c];return'<td>'+(src&&src!=="—"?'<span class="badge '+CBADGE[c]+'">'+src+'</span>':'<span style="color:#374151">—</span>')+'</td>';}).join("");
+                    return'<tr class="'+(row.f?"firing":"")+'"><td>'+ob+'</td><td class="'+(row.f?"xr":"")+'">'+row.eV+'</td><td class="xg">'+row.tV+'</td><td class="xy">'+row.dV+'</td>'+sc+'</tr>';
+                }).join("");
+
+                document.getElementById("filter-row").innerHTML=
+                    '<div class="bg">'+catF+'</div>'
+                    +'<div class="unit-toggle"><button class="'+(hz?"active":"")+'" onclick="ss(\'hz\',true)">Hz</button><button class="'+(!hz?"active":"")+'" onclick="ss(\'hz\',false)">CPM</button></div>';
+                document.getElementById("tbl-wrap").innerHTML=
+                    '<table class="ft"><thead><tr><th>Order</th><th class="xb">Eng '+unit+'</th><th class="xg">Tire '+unit+'</th><th class="xy">DS '+unit+'</th>'+catH+'</tr></thead><tbody>'+trows+'</tbody></table>';
+                document.getElementById("legend2").innerHTML=
+                    '<div style="display:flex;align-items:center;gap:4px"><span class="badge bfire">🔥</span><span>Firing order</span></div>'
+                    +'<div style="display:flex;align-items:center;gap:4px"><span class="xb">Blue</span><span>= Engine</span></div>'
+                    +'<div style="display:flex;align-items:center;gap:4px"><span class="xg">Green</span><span>= Tire</span></div>'
+                    +'<div style="display:flex;align-items:center;gap:4px"><span class="xy">Yellow</span><span>= Driveshaft</span></div>';
+                document.getElementById("formulas").innerHTML=
+                    '<div class="card-body">'
+                    +'<div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:6px">Formula Reference</div>'
+                    +'<div class="fg">'
+                    +'<div class="fb">Engine Hz = (RPM ÷ 60) × Order<br><span style="color:#9ca3af;font-size:10px">RPM = engine speed | 60 = converts to per-second | Order = vibration multiple (0.5×–4×)</span></div>'
+                    +'<div class="fb">Tire Hz = (Speed × 1.467 ÷ Circ) × Order<br><span style="color:#9ca3af;font-size:10px">Speed = vehicle speed in mph | 1.467 = converts mph to ft/s | Circ = tire circumference in ft | Order = vibration multiple</span></div>'
+                    +'<div class="fb">DS RPM = Tire RPM × Final Drive<br><span style="color:#9ca3af;font-size:10px">Tire RPM = rotational speed of wheel | Final Drive = axle ratio (e.g. 3.73:1)</span></div>'
+                    +'<div class="fb">DS Hz = (DS RPM ÷ 60) × Order<br><span style="color:#9ca3af;font-size:10px">DS RPM = driveshaft speed | 60 = converts to per-second | Order = vibration multiple</span></div>'
+                    +'</div></div>';
+            }
+
+            renderAll();
+
+            if('serviceWorker' in navigator){
+                window.addEventListener('load', function(){
+                    navigator.serviceWorker.register('sw.js');
+                });
+            }
+        </script>
+    </body>
+</html>
